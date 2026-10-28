@@ -3,6 +3,15 @@
 Ogni release pubblica come descrizione la sezione della propria versione.
 Prima di creare una release aggiungi qui una sezione `## vX.Y.Z`.
 
+## v1.5.0
+
+- **Versione portatile**: le impostazioni vengono salvate nella cartella
+  `PkgFree-data` accanto al programma, così PKG Free funziona anche da una
+  chiavetta USB. Le cartelle sulla stessa chiavetta vengono ricordate anche se
+  cambia la lettera dell'unità. Le impostazioni della versione precedente
+  vengono riprese automaticamente.
+- *Impostazioni → Informazioni* mostra dove sono salvate le impostazioni.
+
 ## v1.4.0
 
 - **Ripresa automatica**: un'estrazione interrotta riparte da dove si era

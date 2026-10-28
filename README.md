@@ -128,8 +128,24 @@ In shadPS4:
 Opzione **Impostazioni → Unisci gli aggiornamenti al gioco** (attiva di
 default): se la disattivi, le patch vengono estratte in `CUSA12345-UPDATE`
 accanto alla cartella del gioco, formato che shadPS4 riconosce e sovrappone al gioco base
-all'avvio. Le impostazioni sono salvate in `%APPDATA%\PkgFree\config.json`
-(su Linux e macOS in `~/.config/PkgFree/config.json`).
+all'avvio.
+
+### Versione portatile
+
+PKG Free non va installato: copia `PkgFree-windows-x64.exe` (o l'AppImage) dove
+vuoi, anche su una chiavetta USB. Al primo avvio crea accanto al programma la
+cartella `PkgFree-data` e vi salva le impostazioni (se c'erano impostazioni di
+una copia precedente, vengono riprese). Le cartelle che stanno sulla stessa
+chiavetta o disco esterno del programma vengono ricordate in modo relativo,
+quindi funzionano anche se su un altro PC la chiavetta prende un'altra lettera.
+L'aggiornamento dall'app sostituisce solo il programma e lascia intatta la
+cartella dei dati.
+
+Se il programma è in una cartella non scrivibile (es. `C:\Program Files`), le
+impostazioni finiscono in `%APPDATA%\PkgFree\config.json` (su Linux in
+`~/.config/PkgFree/config.json`). Su macOS la modalità portatile si attiva
+creando a mano la cartella `PkgFree-data` accanto a `PkgFree.app`.
+*Impostazioni → Informazioni* mostra dove sono salvate.
 
 ## Uso (riga di comando)
 
@@ -209,6 +225,7 @@ Senza compilare: `python -m pkgfree` (GUI) oppure `python -m pkgfree install ...
 | `pkgfree/keys.py` | chiavi RSA pubbliche per fPKG |
 | `pkgfree/installer.py` | unione gioco + patch + DLC, ripresa, spazio libero, libreria |
 | `pkgfree/updater.py` | aggiornamento dall'app (release GitHub) |
+| `pkgfree/portable.py` | versione portatile (cartella `PkgFree-data`, percorsi relativi) |
 | `pkgfree/i18n.py`, `pkgfree/i18n_en.py` | traduzione inglese |
 | `pkgfree/gui/` | interfaccia Fluent: `extract_page.py` (schede per gioco), `library_page.py`, `progress_page.py` (avanzamento + thread di estrazione), `settings_page.py` (impostazioni, registro), `update_ui.py`, `window.py`, `config.py` |
 | `pkgfree/cli.py` | riga di comando |

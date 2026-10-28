@@ -328,4 +328,8 @@ EN = {
         "A folder for {games} already exists. Files with the same name will be overwritten. "
         "Continue?",
     "Controllo dello spazio non riuscito: {error}": "Free space check failed: {error}",
+    "Versione portatile": "Portable version",
+    "Impostazioni salvate in": "Settings saved in",
+    "Impostazioni salvate accanto al programma: {folder}":
+        "Settings saved next to the program: {folder}",
 }

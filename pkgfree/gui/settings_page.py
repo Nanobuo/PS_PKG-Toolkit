@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import os
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtCore import Qt, QUrl, Signal
+from PySide6.QtGui import QDesktopServices, QFont
 from PySide6.QtWidgets import QFileDialog, QVBoxLayout, QWidget
 from qfluentwidgets import (FluentIcon, HyperlinkCard, OptionsSettingCard, PlainTextEdit,
                             PushSettingCard, ScrollArea, SettingCardGroup, SwitchSettingCard,
@@ -13,7 +13,7 @@ from qfluentwidgets import (FluentIcon, HyperlinkCard, OptionsSettingCard, Plain
 
 from .. import __version__
 from ..i18n import tr
-from .config import cfg
+from .config import cfg, is_portable
 
 REPO_URL = "https://github.com/nanobuo/pkg-free"
 
@@ -111,6 +111,15 @@ class SettingsPage(QWidget):
             REPO_URL, tr("Codice sorgente"), FluentIcon.INFO, "PKG Free",
             tr("Versione {version} · GPL-3.0 · supporta solo PKG fake (fPKG)",
                version=__version__), about))
+        data_dir = os.path.dirname(str(cfg.file))
+        self.dataCard = PushSettingCard(
+            tr("Apri cartella"), FluentIcon.SAVE,
+            tr("Versione portatile") if is_portable() else tr("Impostazioni salvate in"),
+            tr("Impostazioni salvate accanto al programma: {folder}", folder=data_dir)
+            if is_portable() else data_dir, about)
+        self.dataCard.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(data_dir)))
+        about.addSettingCard(self.dataCard)
         lay.addWidget(about)
         lay.addStretch(1)
 
