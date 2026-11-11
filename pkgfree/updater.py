@@ -47,11 +47,11 @@ class Release:
 def asset_name(platform: str = sys.platform) -> Optional[str]:
     """Name of the release file for this platform (same names on every release)."""
     if platform.startswith("win"):
-        return "PkgFree-windows-x64.exe"
+        return "PS-PKG-Toolkit-windows-x64.exe"
     if platform.startswith("linux"):
-        return "PkgFree-linux-x86_64.AppImage"
+        return "PS-PKG-Toolkit-linux-x86_64.AppImage"
     if platform == "darwin":
-        return "PkgFree-macos-arm64.zip"
+        return "PS-PKG-Toolkit-macos-arm64.zip"
     return None
 
 
@@ -78,7 +78,7 @@ def release_from_json(data: dict, platform: str = sys.platform) -> Release:
 def _open(url: str, timeout: float):
     req = urllib.request.Request(url, headers={
         "Accept": "application/vnd.github+json",
-        "User-Agent": f"PkgFree/{__version__}",
+        "User-Agent": f"PS-PKG-Toolkit/{__version__}",
     })
     return urllib.request.urlopen(req, timeout=timeout)
 
@@ -108,7 +108,7 @@ def install_target() -> Optional[str]:
     if sys.platform.startswith("linux"):
         return os.environ.get("APPIMAGE") or None
     if sys.platform == "darwin":
-        # .../PkgFree.app/Contents/MacOS/PkgFree
+        # .../PS-PKG-Toolkit.app/Contents/MacOS/PS-PKG-Toolkit
         bundle = os.path.dirname(os.path.dirname(os.path.dirname(sys.executable)))
         return bundle if bundle.endswith(".app") else None
     return None

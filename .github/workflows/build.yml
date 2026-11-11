@@ -43,18 +43,18 @@ jobs:
 
       - name: Build executables
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name PkgFree --icon assets/pkgfree.png --exclude-module tkinter pkgfree_gui.py
-          pyinstaller --noconfirm --onefile --console --name pkgfree-cli --icon assets/pkgfree.png --exclude-module PySide6 --exclude-module qfluentwidgets --exclude-module tkinter pkgfree_cli.py
+          pyinstaller --noconfirm --onefile --windowed --name PS-PKG-Toolkit --icon assets/ps-pkg-toolkit.png --exclude-module tkinter pkgfree_gui.py
+          pyinstaller --noconfirm --onefile --console --name pspkg --icon assets/ps-pkg-toolkit.png --exclude-module PySide6 --exclude-module qfluentwidgets --exclude-module tkinter pkgfree_cli.py
 
       - name: Package
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force release | Out-Null
-          Copy-Item dist\PkgFree.exe, dist\pkgfree-cli.exe, README.md, LICENSE release\
+          Copy-Item dist\PS-PKG-Toolkit.exe, dist\pspkg.exe, README.md, LICENSE release\
 
       - uses: actions/upload-artifact@v7
         with:
-          name: PkgFree-windows
+          name: PS-PKG-Toolkit-windows
           path: release/
 
   linux:
@@ -91,12 +91,12 @@ jobs:
       - name: Smoke test AppImage
         env:
           APPIMAGE_EXTRACT_AND_RUN: "1"
-        run: dist/PkgFree-x86_64.AppImage --version
+        run: dist/PS-PKG-Toolkit-x86_64.AppImage --version
 
       - uses: actions/upload-artifact@v7
         with:
-          name: PkgFree-linux
-          path: dist/PkgFree-x86_64.AppImage
+          name: PS-PKG-Toolkit-linux
+          path: dist/PS-PKG-Toolkit-x86_64.AppImage
 
   macos:
     if: ${{ !inputs.notes_only }}
@@ -123,16 +123,16 @@ jobs:
 
       - name: Build app
         run: |
-          pyinstaller --noconfirm --windowed --name PkgFree --icon assets/pkgfree.png \
-            --osx-bundle-identifier io.github.nanobuo.pkgfree --exclude-module tkinter pkgfree_main.py
-          dist/PkgFree.app/Contents/MacOS/PkgFree --version
+          pyinstaller --noconfirm --windowed --name PS-PKG-Toolkit --icon assets/ps-pkg-toolkit.png \
+            --osx-bundle-identifier io.github.nanobuo.pspkgtoolkit --exclude-module tkinter pkgfree_main.py
+          dist/PS-PKG-Toolkit.app/Contents/MacOS/PS-PKG-Toolkit --version
           # ditto keeps the bundle's symlinks and permissions intact.
-          ditto -c -k --keepParent dist/PkgFree.app PkgFree-macos-arm64.zip
+          ditto -c -k --keepParent dist/PS-PKG-Toolkit.app PS-PKG-Toolkit-macos-arm64.zip
 
       - uses: actions/upload-artifact@v7
         with:
-          name: PkgFree-macos
-          path: PkgFree-macos-arm64.zip
+          name: PS-PKG-Toolkit-macos
+          path: PS-PKG-Toolkit-macos-arm64.zip
 
   release:
     # On a pushed v* tag, or from "Run workflow" with a release_tag (the tag is
@@ -163,10 +163,15 @@ jobs:
         # /releases/latest/download/<name> links keep working.
         run: |
           mkdir release
-          cp artifacts/PkgFree-windows/PkgFree.exe release/PkgFree-windows-x64.exe
-          cp artifacts/PkgFree-windows/pkgfree-cli.exe release/pkgfree-cli-windows-x64.exe
-          cp artifacts/PkgFree-linux/PkgFree-x86_64.AppImage release/PkgFree-linux-x86_64.AppImage
-          cp artifacts/PkgFree-macos/PkgFree-macos-arm64.zip release/PkgFree-macos-arm64.zip
+          cp artifacts/PS-PKG-Toolkit-windows/PS-PKG-Toolkit.exe release/PS-PKG-Toolkit-windows-x64.exe
+          cp artifacts/PS-PKG-Toolkit-windows/pspkg.exe release/pspkg-windows-x64.exe
+          cp artifacts/PS-PKG-Toolkit-linux/PS-PKG-Toolkit-x86_64.AppImage release/PS-PKG-Toolkit-linux-x86_64.AppImage
+          cp artifacts/PS-PKG-Toolkit-macos/PS-PKG-Toolkit-macos-arm64.zip release/PS-PKG-Toolkit-macos-arm64.zip
+          # Copies under the old names: versions up to 1.5 (PKG Free) look for these to
+          # update themselves.
+          cp release/PS-PKG-Toolkit-windows-x64.exe release/PkgFree-windows-x64.exe
+          cp release/PS-PKG-Toolkit-linux-x86_64.AppImage release/PkgFree-linux-x86_64.AppImage
+          cp release/PS-PKG-Toolkit-macos-arm64.zip release/PkgFree-macos-arm64.zip
           ls -la release
 
       - name: Release notes from CHANGELOG.md
@@ -183,7 +188,7 @@ jobs:
       - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG }}
-          name: PKG Free ${{ env.TAG }}
+          name: PS PKG Toolkit ${{ env.TAG }}
           target_commitish: ${{ github.sha }}
           body_path: release-notes.md
           files: release/*

@@ -3,6 +3,19 @@
 Ogni release pubblica come descrizione la sezione della propria versione.
 Prima di creare una release aggiungi qui una sezione `## vX.Y.Z`.
 
+## v1.6.0
+
+- **Nuovo nome: PS PKG Toolkit** (prima *PKG Free*). Le impostazioni e la
+  cartella portatile della versione precedente vengono riprese da sole, e
+  l'aggiornamento dall'app funziona anche dalle copie con il vecchio nome.
+- **Crea PKG**: il pulsante sulla scheda di un gioco unisce gioco base e
+  aggiornamenti in un **nuovo PKG** con l'ultima versione, da installare su una
+  PS4 modificata. Non serve estrarre nulla: i file vengono letti direttamente
+  dai PKG di origine. I DLC restano PKG separati.
+- Riga di comando: il programma si chiama `pspkg`; nuovi comandi `merge`
+  (nuovo PKG da gioco base e aggiornamenti) e `pack` (PKG da una cartella già
+  estratta).
+
 ## v1.5.0
 
 - **Versione portatile**: le impostazioni vengono salvate nella cartella

@@ -67,6 +67,7 @@ class StepChip(SimpleCardWidget):
 
 class GameCard(SimpleCardWidget):
     removeRequested = Signal(list)
+    createPkgRequested = Signal(list)
 
     def __init__(self, group: installer.TitleGroup, games_dir: str, icon: Optional[bytes],
                  parent=None):
@@ -108,6 +109,14 @@ class GameCard(SimpleCardWidget):
             ver.addWidget(secondary(CaptionLabel(tr("Versione finale"), self)), 0, Qt.AlignRight)
             ver.addWidget(SubtitleLabel(group.final_version, self), 0, Qt.AlignRight)
             head.addLayout(ver)
+        if group.base and group.patches:
+            pack = PushButton(FluentIcon.SAVE_AS, tr("Crea PKG"), self)
+            pack.setToolTip(tr("Unisce gioco base e aggiornamenti in un nuovo PKG, da installare "
+                               "su una PS4 modificata. I DLC restano PKG separati."))
+            pack.installEventFilter(ToolTipFilter(pack))
+            sources = [group.base.path] + [p.path for p in group.patches]
+            pack.clicked.connect(lambda: self.createPkgRequested.emit(sources))
+            head.addWidget(pack, 0, Qt.AlignTop)
         rm = TransparentToolButton(FluentIcon.DELETE, self)
         rm.setToolTip(tr("Rimuovi questo gioco dall'elenco"))
         rm.installEventFilter(ToolTipFilter(rm))
@@ -142,6 +151,7 @@ class GameCard(SimpleCardWidget):
 
 class ExtractPage(QWidget):
     startRequested = Signal()
+    createPkgRequested = Signal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -268,6 +278,7 @@ class ExtractPage(QWidget):
                          if i.kind != "dlc" and self.icons.get(i.path)), None)
             card = GameCard(group, games_dir, icon, self)
             card.removeRequested.connect(self.remove_paths)
+            card.createPkgRequested.connect(self.createPkgRequested)
             self.cardsLayout.addWidget(card)
             self.cards.append(card)
         self.empty.setVisible(not plan.groups)

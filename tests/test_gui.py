@@ -6,10 +6,11 @@ import pathlib
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-os.environ["PKGFREE_LANG"] = "it"  # messages checked by the tests are Italian
+os.environ["PSPKG_LANG"] = "it"  # messages checked by the tests are Italian
 
 try:
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
@@ -59,6 +60,26 @@ class GuiSmoke(unittest.TestCase):
             self.assertEqual((game / "eboot.bin").read_bytes(), b"new")
             self.assertEqual((game / "a.txt").read_bytes(), b"a")
             self.assertEqual(w.progressPage.title.text(), "Estrazione completata")
+
+            # Same PKGs merged into a new one from the game card.
+            out = os.path.join(d, "merged.pkg")
+            card = w.extractPage.cards[0]
+            from qfluentwidgets import PushButton
+            button = next(b for b in card.findChildren(PushButton) if b.text() == "Crea PKG")
+            with mock.patch("pkgfree.gui.window.QFileDialog.getSaveFileName",
+                            return_value=(out, "")):
+                button.click()
+            loop = QEventLoop()
+            w.worker.finished.connect(loop.quit)
+            QTimer.singleShot(30000, loop.quit)
+            if w.worker.isRunning():
+                loop.exec()
+            app.processEvents()
+            self.assertEqual(w.progressPage.title.text(), "PKG creato")
+            from pkgfree.pkg import PkgFile
+            with PkgFile(out) as merged:
+                self.assertEqual(merged.info.app_ver, "01.01")
+                self.assertEqual(merged.info.category, "gd")
             w.close()
             w.deleteLater()
             app.processEvents()

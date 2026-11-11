@@ -70,7 +70,7 @@ class UpdateDialog(MessageBoxBase):
         self.worker: UpdateDownloadWorker | None = None
 
         self.viewLayout.addWidget(SubtitleLabel(
-            tr("PKG Free {version} disponibile", version=release.version), self))
+            tr("PS PKG Toolkit {version} disponibile", version=release.version), self))
         self.notes = PlainTextEdit(self)
         self.notes.setReadOnly(True)
         notes = re.sub(r"\*\*|__|`", "", release.notes).strip()
@@ -130,7 +130,7 @@ class UpdateDialog(MessageBoxBase):
         try:
             updater.relaunch(self.target)
         except OSError as ex:
-            self.status.setText(tr("Aggiornamento installato. Riavvia PKG Free a mano "
+            self.status.setText(tr("Aggiornamento installato. Riavvia PS PKG Toolkit a mano "
                                    "({error}).", error=ex))
             self.cancelButton.setText(tr("Chiudi"))
             return

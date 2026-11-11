@@ -5,23 +5,23 @@ from __future__ import annotations
 import os
 
 from PySide6.QtCore import QFile, QSize, Qt, QTimer
-from PySide6.QtWidgets import QApplication, QSystemTrayIcon
+from PySide6.QtWidgets import QApplication, QFileDialog, QSystemTrayIcon
 from qfluentwidgets import (FluentIcon, FluentWindow, InfoBar, InfoBarIcon, InfoBarPosition,
                             MessageBox,
                             NavigationItemPosition, PushButton, Theme, isDarkTheme)
 
-from .. import __version__, installer, updater
+from .. import __version__, installer, merge, updater
 from ..i18n import tr
 from ..pkg import PkgError
 from .config import cfg
 from .extract_page import ExtractPage
 from .library_page import LibraryPage
-from .progress_page import ExtractWorker, ProgressPage
+from .progress_page import ExtractWorker, MergeWorker, ProgressPage
 from .settings_page import LogPage, SettingsPage
 from .update_ui import UpdateCheckWorker, UpdateDialog
 from .widgets import fmt_size
 
-APP_NAME = "PKG Free"
+APP_NAME = "PS PKG Toolkit"
 
 
 def trash_pkg(path: str) -> None:
@@ -33,7 +33,7 @@ def trash_pkg(path: str) -> None:
 class MainWindow(FluentWindow):
     def __init__(self):
         super().__init__()
-        self.worker: ExtractWorker | None = None
+        self.worker: ExtractWorker | MergeWorker | None = None
         self.tray: QSystemTrayIcon | None = None
         self.updateCheck: UpdateCheckWorker | None = None
         self.updateBar: InfoBar | None = None
@@ -59,11 +59,12 @@ class MainWindow(FluentWindow):
                              NavigationItemPosition.BOTTOM)
 
         self.extractPage.startRequested.connect(self.start_extraction)
+        self.extractPage.createPkgRequested.connect(self.start_merge)
         self.progressPage.cancelRequested.connect(self.cancel_extraction)
         self.progressPage.fractionChanged.connect(self._show_fraction)
         self.settingsPage.checkUpdatesRequested.connect(lambda: self.check_updates(manual=True))
         cfg.appRestartSig.connect(self._restart_needed)
-        self.logPage.append(f"PKG Free {__version__}")
+        self.logPage.append(f"PS PKG Toolkit {__version__}")
         updater.cleanup_previous()
         if cfg.get(cfg.checkUpdates):
             QTimer.singleShot(2000, lambda: self.check_updates(manual=False))
@@ -81,14 +82,14 @@ class MainWindow(FluentWindow):
 
     def _update_found(self, release) -> None:
         self.settingsPage.set_update_status(tr(
-            "PKG Free {current} · disponibile la versione {version}", current=__version__,
+            "PS PKG Toolkit {current} · disponibile la versione {version}", current=__version__,
             version=release.version))
-        self.logPage.append(tr("Disponibile PKG Free {version}", version=release.version))
+        self.logPage.append(tr("Disponibile PS PKG Toolkit {version}", version=release.version))
         if self.updateBar is not None:
             self.updateBar.close()
         # Built in full before show(): the bar sizes itself when shown.
         self.updateBar = InfoBar(
-            InfoBarIcon.INFORMATION, tr("Aggiornamento disponibile"), f"PKG Free {release.version}",
+            InfoBarIcon.INFORMATION, tr("Aggiornamento disponibile"), f"PS PKG Toolkit {release.version}",
             isClosable=True, duration=-1, position=InfoBarPosition.TOP_RIGHT,
             parent=self.stackedWidget)
         button = PushButton(tr("Dettagli"), self.updateBar)
@@ -98,7 +99,7 @@ class MainWindow(FluentWindow):
 
     def _update_none(self, release, manual: bool) -> None:
         self.settingsPage.set_update_status(
-            tr("PKG Free {current} · è l'ultima versione", current=__version__))
+            tr("PS PKG Toolkit {current} · è l'ultima versione", current=__version__))
         if manual:
             InfoBar.success(tr("Nessun aggiornamento"),
                             tr("Stai già usando l'ultima versione ({version}).",
@@ -107,7 +108,7 @@ class MainWindow(FluentWindow):
 
     def _update_failed(self, message: str, manual: bool) -> None:
         self.settingsPage.set_update_status(
-            tr("PKG Free {current} · controllo non riuscito", current=__version__))
+            tr("PS PKG Toolkit {current} · controllo non riuscito", current=__version__))
         self.logPage.append(tr("Controllo aggiornamenti: {message}", message=message))
         if manual:
             InfoBar.warning(tr("Controllo non riuscito"), message, duration=6000,
@@ -115,7 +116,7 @@ class MainWindow(FluentWindow):
 
     def show_update(self, release) -> None:
         if self.worker and self.worker.isRunning():
-            InfoBar.warning(tr("Estrazione in corso"), tr("Aggiorna al termine dell'estrazione."),
+            InfoBar.warning(tr("Operazione in corso"), tr("Aggiorna al termine dell'operazione."),
                             duration=4000, position=InfoBarPosition.TOP_RIGHT, parent=self)
             return
         UpdateDialog(release, self).exec()
@@ -178,6 +179,54 @@ class MainWindow(FluentWindow):
         self.switchTo(self.progressPage)
         self.worker.start()
 
+    def start_merge(self, paths: list[str]) -> None:
+        if self.worker and self.worker.isRunning():
+            return
+        try:
+            title, tid, version = merge.describe(paths)
+        except (PkgError, OSError) as ex:
+            InfoBar.error(tr("Impossibile procedere"), str(ex), duration=6000,
+                          position=InfoBarPosition.TOP_RIGHT, parent=self)
+            return
+        start_dir = cfg.get(cfg.pkgDir) or os.path.dirname(paths[0])
+        out, _ = QFileDialog.getSaveFileName(
+            self, tr("Salva il nuovo PKG"),
+            os.path.join(start_dir, merge.output_name(title, tid, version)),
+            tr("PKG PS4 (*.pkg)"))
+        if not out:
+            return
+        if not out.lower().endswith(".pkg"):
+            out += ".pkg"
+        out = os.path.abspath(out)
+        if out in (os.path.abspath(p) for p in paths):
+            InfoBar.error(tr("Impossibile procedere"),
+                          tr("Scegli un nome diverso da quello dei PKG di origine."),
+                          duration=6000, position=InfoBarPosition.TOP_RIGHT, parent=self)
+            return
+        cfg.set(cfg.pkgDir, os.path.dirname(out))
+        short = merge.check_space(paths, out)
+        if short:
+            box = MessageBox(tr("Spazio su disco insufficiente"),
+                             tr("Per il nuovo PKG servono fino a {needed}, liberi {free}.",
+                                needed=fmt_size(short[0]), free=fmt_size(short[1])) + "\n\n" +
+                             tr("Libera spazio oppure scegli un'altra cartella."), self)
+            box.yesButton.setText(tr("Crea comunque"))
+            box.cancelButton.setText(tr("Annulla"))
+            if not box.exec():
+                return
+        infos = sorted((installer.read_info(p) for p in paths),
+                       key=lambda i: (i.kind != "game", installer._version_key(i.app_ver)))
+        self.worker = MergeWorker(paths, out, parent=self)
+        self.worker.logged.connect(self.logPage.append)
+        self.worker.progressed.connect(self.progressPage.on_merge_progress)
+        self.worker.succeeded.connect(lambda _result: self._finished(True, ""))
+        self.worker.failed.connect(lambda msg: self._finished(False, msg))
+        self.logPage.append(tr("Creazione di {path}", path=out))
+        self.progressPage.start_merge(infos, out)
+        self.extractPage.set_busy(True)
+        self.switchTo(self.progressPage)
+        self.worker.start()
+
     def _space_ok(self, plan, games: str, addons: str, separate: bool) -> bool:
         """Warn before starting when a destination disk is too small."""
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -219,8 +268,9 @@ class MainWindow(FluentWindow):
             self.tray.activated.connect(lambda _reason: self._raise())
         self.tray.show()
         if ok:
-            self.tray.showMessage(APP_NAME, tr("Estrazione completata."),
-                                  QSystemTrayIcon.Information, 8000)
+            done = (tr("PKG creato.") if isinstance(self.worker, MergeWorker)
+                    else tr("Estrazione completata."))
+            self.tray.showMessage(APP_NAME, done, QSystemTrayIcon.Information, 8000)
         else:
             self.tray.showMessage(APP_NAME, message, QSystemTrayIcon.Warning, 8000)
         QTimer.singleShot(15000, self.tray.hide)
@@ -247,8 +297,8 @@ class MainWindow(FluentWindow):
 
     def closeEvent(self, e):
         if self.worker and self.worker.isRunning():
-            box = MessageBox(tr("Estrazione in corso"),
-                             tr("Vuoi interrompere l'estrazione e uscire?"), self)
+            box = MessageBox(tr("Operazione in corso"),
+                             tr("Vuoi interrompere l'operazione in corso e uscire?"), self)
             box.yesButton.setText(tr("Interrompi ed esci"))
             box.cancelButton.setText(tr("Continua"))
             if not box.exec():

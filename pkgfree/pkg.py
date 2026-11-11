@@ -295,10 +295,8 @@ class PkgFile:
                 "({error})", error=ex)) from ex
 
     # -- sce_sys metadata ------------------------------------------------------
-    def extract_sce_sys(self, dest_dir: str) -> list[str]:
-        """Write the PKG header entries (param.sfo, icons, npbind.dat...) to dest_dir/sce_sys."""
-        written = []
-        sce_sys = os.path.join(dest_dir, "sce_sys")
+    def sce_sys_entries(self) -> Iterator[tuple[str, bytes]]:
+        """(name, data) of the header entries that belong in sce_sys (param.sfo, icons...)."""
         for e in self.entries:
             if e.id < 0x400:  # digests / keys / internal tables
                 continue
@@ -311,6 +309,13 @@ class PkgFile:
                     continue  # bound to console keys, useless for the emulator
                 iv_key = crypto.entry_iv_key(e.raw, self._get_dk3())
                 data = crypto.aes_cbc_decrypt(iv_key, data)
+            yield name, data
+
+    def extract_sce_sys(self, dest_dir: str) -> list[str]:
+        """Write the PKG header entries (param.sfo, icons, npbind.dat...) to dest_dir/sce_sys."""
+        written = []
+        sce_sys = os.path.join(dest_dir, "sce_sys")
+        for name, data in self.sce_sys_entries():
             out = os.path.join(sce_sys, *name.split("/"))
             os.makedirs(long_path(os.path.dirname(out)), exist_ok=True)
             with open(long_path(out), "wb") as f:
@@ -330,10 +335,11 @@ class PkgFile:
             self._pfs = _PfsReader(self)
         return self._pfs
 
-    def list_files(self) -> list[PfsNode]:
+    def list_files(self, safe_names: bool = True) -> list[PfsNode]:
+        """Files and folders of the game; safe_names replaces characters Windows rejects."""
         if not self.has_pfs:
             return []
-        return list(self.pfs().walk())
+        return list(self.pfs().walk(safe_names))
 
     # -- integrity -------------------------------------------------------------
     def _hash_range(self, offset: int, size: int, progress, base: int, total: int,
@@ -604,7 +610,7 @@ class _PfsReader:
                 if d_ino > 0 and d_type in (PFS_FILE, PFS_DIR):
                     yield name, d_ino, d_type
 
-    def walk(self) -> Iterator[PfsNode]:
+    def walk(self, safe_names: bool = True) -> Iterator[PfsNode]:
         uroot = None
         for name, ino, typ in self._dirents(SUPERROOT_INODE):
             if name == "uroot" and typ == PFS_DIR:
@@ -616,7 +622,7 @@ class _PfsReader:
         while stack:
             prefix, dir_ino = stack.pop()
             for name, ino, typ in self._dirents(dir_ino):
-                path = prefix + _safe_name(name)
+                path = prefix + (_safe_name(name) if safe_names else name)
                 if typ == PFS_DIR:
                     if ino in seen:
                         continue

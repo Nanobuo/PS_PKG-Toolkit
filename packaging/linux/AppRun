@@ -1,4 +1,4 @@
 #!/bin/sh
-# Without arguments the GUI starts; with arguments it behaves like pkgfree-cli.
+# Without arguments the GUI starts; with arguments it behaves like pspkg (command line).
 HERE="$(dirname "$(readlink -f "$0")")"
-exec "$HERE/usr/bin/PkgFree/PkgFree" "$@"
+exec "$HERE/usr/bin/PS-PKG-Toolkit/PS-PKG-Toolkit" "$@"

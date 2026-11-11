@@ -51,7 +51,11 @@ class StepBadge(QWidget):
         self.number = number
         self.dlc = dlc
         self.setFixedSize(22, 22)
-        qconfig.themeChanged.connect(lambda _: self.update())
+        # A bound method (not a lambda) is disconnected when the widget is destroyed.
+        qconfig.themeChanged.connect(self._theme_changed)
+
+    def _theme_changed(self, _theme) -> None:
+        self.update()
 
     def paintEvent(self, _):
         dark = isDarkTheme()
@@ -99,7 +103,10 @@ class DropZone(QWidget):
         lay.addWidget(self.btnFiles)
         lay.addWidget(self.btnFolder)
         lay.addStretch(1)
-        qconfig.themeChanged.connect(lambda _: self.update())
+        qconfig.themeChanged.connect(self._theme_changed)
+
+    def _theme_changed(self, _theme) -> None:
+        self.update()
 
     def set_highlight(self, on: bool) -> None:
         self.highlight = on

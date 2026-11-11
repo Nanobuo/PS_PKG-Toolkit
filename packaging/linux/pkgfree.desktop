@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=PKG Free
-Comment=Estrae PKG PS4 (fPKG) per shadPS4 unendo gioco, aggiornamenti e DLC
-Exec=PkgFree
-Icon=pkgfree
-Terminal=false
-Categories=Utility;Game;

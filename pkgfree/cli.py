@@ -7,7 +7,7 @@ import os
 import sys
 import time
 
-from . import __version__, i18n, installer
+from . import __version__, builder, i18n, installer, merge
 from .i18n import tr
 from .pkg import Cancelled, PkgError, PkgFile
 
@@ -96,6 +96,71 @@ def _gb(n: int) -> str:
     return f"{n / (1 << 30):.1f} GB"
 
 
+class _BuildProgress:
+    def __init__(self):
+        self.last = 0.0
+
+    def __call__(self, done, total, name):
+        now = time.monotonic()
+        if now - self.last < 0.2 and done != total:
+            return
+        self.last = now
+        pct = 100 * done // total if total else 100
+        sys.stdout.write(f"\r    {pct:3d}%  {name[-60:]:<60}")
+        if done == total:
+            sys.stdout.write("\n")
+        sys.stdout.flush()
+
+
+def _log_line(message: str) -> None:
+    """Print a message without mixing it with the progress line."""
+    sys.stdout.write(f"\r{message:<70}\n")
+    sys.stdout.flush()
+
+
+def _output_path(output: str, default_name: str) -> str:
+    if os.path.isdir(output) or output.endswith(("/", os.sep)):
+        os.makedirs(output, exist_ok=True)
+        return os.path.join(output, default_name)
+    return output
+
+
+def _cmd_merge(args) -> int:
+    title, tid, version = merge.describe(args.pkg)
+    out = _output_path(args.output, merge.output_name(title, tid, version))
+    short = merge.check_space(args.pkg, out)
+    if short and not args.force:
+        print(tr("ERRORE: spazio insufficiente per il nuovo PKG: servono {needed}, liberi {free}. "
+                 "Usa --force per procedere comunque.", needed=_gb(short[0]), free=_gb(short[1])),
+              file=sys.stderr)
+        return 1
+    print(tr("Creazione di {path}", path=out))
+    result = merge.merge_pkgs(args.pkg, out, log=_log_line, progress=_BuildProgress())
+    print(tr("Creato {path}: {title} v{version} ({cid})", path=out, title=result.title,
+             version=result.version, cid=result.content_id))
+    return 0
+
+
+def _cmd_pack(args) -> int:
+    from .sfo import Sfo
+    folder = os.path.abspath(args.folder)
+    files, dirs = builder.folder_sources(folder)
+    sfo_path = os.path.join(folder, "sce_sys", "param.sfo")
+    if not os.path.isfile(sfo_path):
+        print(tr("ERRORE: {path} non trovato: non è la cartella di un gioco.", path=sfo_path),
+              file=sys.stderr)
+        return 1
+    with open(sfo_path, "rb") as f:
+        sfo = Sfo.parse(f.read())
+    tid = str(sfo.get("TITLE_ID", "")) or os.path.basename(folder)
+    out = _output_path(args.output, merge.output_name(str(sfo.get("TITLE", "")), tid,
+                                                      str(sfo.get("APP_VER", ""))))
+    print(tr("Creazione di {path}", path=out))
+    cid = builder.build_pkg(files, dirs, out, log=_log_line, progress=_BuildProgress())
+    print(tr("Creato {path} ({cid})", path=out, cid=cid))
+    return 0
+
+
 def _cmd_verify(args) -> int:
     bad = False
     labels = {"ok": "OK", "mismatch": tr("NON CORRISPONDE"),
@@ -110,10 +175,11 @@ def _cmd_verify(args) -> int:
 
 
 def main(argv=None) -> int:
-    i18n.set_language(i18n.resolve(os.environ.get("PKGFREE_LANG", "auto")))
+    i18n.set_language(i18n.resolve(os.environ.get("PSPKG_LANG") or os.environ.get("PKGFREE_LANG", "auto")))
     parser = argparse.ArgumentParser(
-        prog="pkgfree",
-        description=tr("Estrae PKG PS4 (fPKG) in cartelle per shadPS4, unendo gioco, patch e DLC."),
+        prog="pspkg",
+        description=tr("Estrae PKG PS4 (fPKG) in cartelle per shadPS4 unendo gioco, patch e DLC, oppure crea "
+                       "un nuovo PKG con gioco e aggiornamenti già uniti."),
     )
     parser.add_argument("--version", action="version", version=__version__)
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -149,6 +215,21 @@ def main(argv=None) -> int:
     p_inst.add_argument("--no-resume", action="store_true",
                         help=tr("non riprendere un'estrazione interrotta: estrai tutto da capo"))
     p_inst.set_defaults(func=_cmd_install)
+
+    p_merge = sub.add_parser("merge", help=tr("crea un nuovo PKG di gioco unendo il gioco base e "
+                                              "i suoi aggiornamenti"))
+    p_merge.add_argument("pkg", nargs="+", help=tr("gioco base e aggiornamenti (in qualsiasi ordine)"))
+    p_merge.add_argument("-o", "--output", required=True,
+                         help=tr("file PKG da creare, oppure una cartella (nome automatico)"))
+    p_merge.add_argument("--force", action="store_true",
+                         help=tr("procedi anche se lo spazio libero non basta"))
+    p_merge.set_defaults(func=_cmd_merge)
+
+    p_pack = sub.add_parser("pack", help=tr("crea un PKG di gioco da una cartella estratta"))
+    p_pack.add_argument("folder", help=tr("cartella del gioco (quella che contiene sce_sys)"))
+    p_pack.add_argument("-o", "--output", required=True,
+                        help=tr("file PKG da creare, oppure una cartella (nome automatico)"))
+    p_pack.set_defaults(func=_cmd_pack)
 
     args = parser.parse_args(argv)
     try:

@@ -36,14 +36,14 @@ class Updater(unittest.TestCase):
         self.assertTrue(updater.is_newer("1.10.0", "1.9.3"))
         self.assertFalse(updater.is_newer("1.3.0", "1.3.0"))
         self.assertFalse(updater.is_newer("1.2.9", "1.3.0"))
-        self.assertEqual(updater.asset_name("win32"), "PkgFree-windows-x64.exe")
-        self.assertEqual(updater.asset_name("linux"), "PkgFree-linux-x86_64.AppImage")
-        self.assertEqual(updater.asset_name("darwin"), "PkgFree-macos-arm64.zip")
-        rel = updater.release_from_json(release_json("PkgFree-linux-x86_64.AppImage", "u", b"x"),
+        self.assertEqual(updater.asset_name("win32"), "PS-PKG-Toolkit-windows-x64.exe")
+        self.assertEqual(updater.asset_name("linux"), "PS-PKG-Toolkit-linux-x86_64.AppImage")
+        self.assertEqual(updater.asset_name("darwin"), "PS-PKG-Toolkit-macos-arm64.zip")
+        rel = updater.release_from_json(release_json("PS-PKG-Toolkit-linux-x86_64.AppImage", "u", b"x"),
                                         "linux")
         self.assertEqual((rel.version, rel.tag, rel.asset_url), ("9.1.0", "v9.1.0", "u"))
         self.assertEqual(rel.asset_sha256, hashlib.sha256(b"x").hexdigest())
-        none = updater.release_from_json(release_json("PkgFree-linux-x86_64.AppImage", "u", b"x"),
+        none = updater.release_from_json(release_json("PS-PKG-Toolkit-linux-x86_64.AppImage", "u", b"x"),
                                          "win32")
         self.assertIsNone(none.asset_url)
 
@@ -70,7 +70,7 @@ class Updater(unittest.TestCase):
 
     def test_apply_replaces_target(self):
         for platform in ("linux", "win32"):
-            target = self.d / f"PkgFree-{platform}"
+            target = self.d / f"PS-PKG-Toolkit-{platform}"
             target.write_bytes(b"old")
             new = pathlib.Path(updater.staging_path(str(target)))
             new.write_bytes(b"new")

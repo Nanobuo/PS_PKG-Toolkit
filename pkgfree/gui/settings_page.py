@@ -100,7 +100,7 @@ class SettingsPage(QWidget):
             tr("Controlla gli aggiornamenti all'avvio"),
             tr("Cerca una nuova versione su GitHub quando apri il programma."))
         self.updateCard = PushSettingCard(tr("Controlla ora"), FluentIcon.SYNC,
-                                          tr("Versione installata"), f"PKG Free {__version__}",
+                                          tr("Versione installata"), f"PS PKG Toolkit {__version__}",
                                           updates)
         self.updateCard.clicked.connect(self.checkUpdatesRequested)
         updates.addSettingCard(self.updateCard)
@@ -108,7 +108,7 @@ class SettingsPage(QWidget):
 
         about = SettingCardGroup(tr("Informazioni"), view)
         about.addSettingCard(HyperlinkCard(
-            REPO_URL, tr("Codice sorgente"), FluentIcon.INFO, "PKG Free",
+            REPO_URL, tr("Codice sorgente"), FluentIcon.INFO, "PS PKG Toolkit",
             tr("Versione {version} · GPL-3.0 · supporta solo PKG fake (fPKG)",
                version=__version__), about))
         data_dir = os.path.dirname(str(cfg.file))

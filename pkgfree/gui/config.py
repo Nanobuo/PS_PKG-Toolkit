@@ -1,5 +1,5 @@
-"""Persistent settings, stored as JSON in PkgFree-data next to the program (portable)
-or in %APPDATA%\\PkgFree."""
+"""Persistent settings, stored as JSON in PS-PKG-Toolkit-data next to the program
+(portable) or in %APPDATA%\\PS-PKG-Toolkit."""
 
 import os
 from typing import Optional
@@ -18,7 +18,10 @@ def config_path() -> str:
     prog = portable.program_dir()
     data = portable.portable_data_dir(prog)
     _portable_base = prog if data else None
-    return os.path.join(data or portable.user_data_dir(), portable.CONFIG_NAME)
+    if not data:
+        data = portable.user_data_dir()
+        portable.carry_over_settings(data)
+    return os.path.join(data, portable.CONFIG_NAME)
 
 
 def is_portable() -> bool:
@@ -39,6 +42,7 @@ class Config(QConfig):
     gamesDir = ConfigItem("Paths", "GamesDir", "", serializer=PathSerializer())
     addonsDir = ConfigItem("Paths", "AddonsDir", "", serializer=PathSerializer())
     lastDir = ConfigItem("Paths", "LastDir", "", serializer=PathSerializer())
+    pkgDir = ConfigItem("Paths", "PkgDir", "", serializer=PathSerializer())
     mergeUpdates = ConfigItem("Extraction", "MergeUpdates", True, BoolValidator())
     titleFolder = ConfigItem("Extraction", "TitleFolder", True, BoolValidator())
     verifyPkgs = ConfigItem("Extraction", "VerifyPkgs", False, BoolValidator())

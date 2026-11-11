@@ -9,7 +9,7 @@ from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-os.environ["PKGFREE_LANG"] = "it"  # messages checked by the tests are Italian
+os.environ["PSPKG_LANG"] = "it"  # messages checked by the tests are Italian
 
 from fake_pkg_builder import build_pkg  # noqa: E402
 from pkgfree import installer  # noqa: E402

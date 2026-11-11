@@ -1,9 +1,13 @@
-# PKG Free
+# PS PKG Toolkit
 
 Programma per Windows, Linux e macOS che estrae i file **PKG PS4** in una cartella pronta per
 l'emulatore [shadPS4](https://github.com/shadps4-emu/shadPS4), unendo
 **gioco base + aggiornamenti (patch)** in un'unica cartella aggiornata e
-sistemando i **DLC** nella struttura che shadPS4 si aspetta.
+sistemando i **DLC** nella struttura che shadPS4 si aspetta. Può anche creare un
+**nuovo PKG** con il gioco e i suoi aggiornamenti già uniti, da installare su
+una PS4 modificata.
+
+Fino alla versione 1.5 il programma si chiamava *PKG Free*.
 
 > Sono supportati solo i PKG **"fake" (fPKG)**: backup dei propri giochi e
 > homebrew firmati con le chiavi di debug pubbliche. I PKG retail scaricati dal
@@ -26,16 +30,20 @@ la descrizione di una release già pubblicata, modifica la sua sezione e avvia
 
 | Sistema | File |
 |---|---|
-| Windows 10/11 (x64) | `PkgFree-windows-x64.exe` (interfaccia grafica, ~60–80 MB perché include Qt) e `pkgfree-cli-windows-x64.exe` (riga di comando) |
-| Linux (x86_64) | `PkgFree-linux-x86_64.AppImage` (interfaccia grafica e riga di comando in un unico file) |
-| macOS (Apple Silicon) | `PkgFree-macos-arm64.zip` (contiene `PkgFree.app`) |
+| Windows 10/11 (x64) | `PS-PKG-Toolkit-windows-x64.exe` (interfaccia grafica, ~60–80 MB perché include Qt) e `pspkg-windows-x64.exe` (riga di comando) |
+| Linux (x86_64) | `PS-PKG-Toolkit-linux-x86_64.AppImage` (interfaccia grafica e riga di comando in un unico file) |
+| macOS (Apple Silicon) | `PS-PKG-Toolkit-macos-arm64.zip` (contiene `PS-PKG-Toolkit.app`) |
+
+I file `PkgFree-*` presenti nelle release servono solo all'aggiornamento
+automatico delle copie installate con il vecchio nome: sono identici a quelli
+`PS-PKG-Toolkit-*`.
 
 **Linux:** rendi eseguibile il file e avvialo:
 
 ```bash
-chmod +x PkgFree-linux-x86_64.AppImage
-./PkgFree-linux-x86_64.AppImage                 # interfaccia grafica
-./PkgFree-linux-x86_64.AppImage install gioco.pkg patch.pkg -o ~/Giochi/PS4   # riga di comando
+chmod +x PS-PKG-Toolkit-linux-x86_64.AppImage
+./PS-PKG-Toolkit-linux-x86_64.AppImage                 # interfaccia grafica
+./PS-PKG-Toolkit-linux-x86_64.AppImage install gioco.pkg patch.pkg -o ~/Giochi/PS4   # riga di comando
 ```
 
 Se l'AppImage non parte per la mancanza di FUSE, installa `libfuse2` oppure
@@ -43,15 +51,15 @@ avvialo con `--appimage-extract-and-run`.
 
 **macOS:** l'app non è firmata, quindi al primo avvio macOS la blocca. Apri
 **Impostazioni di Sistema → Privacy e sicurezza** e premi **Apri comunque**,
-oppure da Terminale: `xattr -dr com.apple.quarantine /Applications/PkgFree.app`.
-La riga di comando è `PkgFree.app/Contents/MacOS/PkgFree install …`.
+oppure da Terminale: `xattr -dr com.apple.quarantine /Applications/PS-PKG-Toolkit.app`.
+La riga di comando è `PS-PKG-Toolkit.app/Contents/MacOS/PS-PKG-Toolkit install …`.
 
 ## Uso (interfaccia grafica)
 
 L'interfaccia segue lo stile **Fluent** di Windows 11 (menu laterale, schede,
 sfondo Mica) e supporta il **tema chiaro e scuro**.
 
-1. Avvia `PkgFree.exe`.
+1. Avvia `PS-PKG-Toolkit-windows-x64.exe`.
 2. Nella pagina **Estrai** trascina i file `.pkg` (o usa **Aggiungi PKG…** /
    **Aggiungi cartella…**): gioco base, aggiornamenti e DLC, in qualsiasi
    ordine. Il tipo viene riconosciuto dal `param.sfo` e i PKG vengono
@@ -130,44 +138,76 @@ default): se la disattivi, le patch vengono estratte in `CUSA12345-UPDATE`
 accanto alla cartella del gioco, formato che shadPS4 riconosce e sovrappone al gioco base
 all'avvio.
 
+### Creare un PKG unico (per PS4 modificata)
+
+Nella pagina **Estrai**, ogni gioco aggiunto insieme ai suoi aggiornamenti ha il
+pulsante **Crea PKG**: scegli dove salvare il file (il nome proposto è
+`Titolo [CUSA12345] v01.28.pkg`) e il programma crea un **nuovo PKG di gioco**
+che contiene già l'ultima versione, da installare sulla console al posto di
+gioco base + patch. Non serve estrarre nulla: i file vengono letti direttamente
+dai PKG di origine, quindi lo spazio necessario è solo quello del nuovo PKG
+(circa la somma dei PKG di origine). La velocità è di circa 100 MB/s: per un
+gioco da 50 GB servono alcuni minuti.
+
+![PKG creato, tema scuro](docs/crea-pkg-scuro.png)
+
+Il nuovo PKG è un fPKG con la stessa struttura di quelli creati da
+[LibOrbisPkg](https://github.com/maxton/LibOrbisPkg): firmato con le chiavi
+pubbliche "fake", licenza di debug e passcode di zeri. Si installa come un
+normale fPKG, quindi serve una console modificata in grado di installarli.
+
+- I **DLC** non possono far parte del PKG del gioco: restano PKG separati, da
+  installare come prima.
+- Le **patch delta** non possono essere unite (come per l'estrazione).
+- I test automatici controllano ogni PKG creato con gli stessi criteri del
+  validatore di LibOrbisPkg (impronte, firme dei blocchi PFS, licenza). Durante
+  lo sviluppo non è stato possibile provarlo su una console reale.
+
 ### Versione portatile
 
-PKG Free non va installato: copia `PkgFree-windows-x64.exe` (o l'AppImage) dove
+PS PKG Toolkit non va installato: copia `PS-PKG-Toolkit-windows-x64.exe` (o l'AppImage) dove
 vuoi, anche su una chiavetta USB. Al primo avvio crea accanto al programma la
-cartella `PkgFree-data` e vi salva le impostazioni (se c'erano impostazioni di
-una copia precedente, vengono riprese). Le cartelle che stanno sulla stessa
+cartella `PS-PKG-Toolkit-data` e vi salva le impostazioni (se c'erano impostazioni di
+una copia precedente, anche di *PKG Free*, vengono riprese). Le cartelle che stanno sulla stessa
 chiavetta o disco esterno del programma vengono ricordate in modo relativo,
 quindi funzionano anche se su un altro PC la chiavetta prende un'altra lettera.
 L'aggiornamento dall'app sostituisce solo il programma e lascia intatta la
 cartella dei dati.
 
 Se il programma è in una cartella non scrivibile (es. `C:\Program Files`), le
-impostazioni finiscono in `%APPDATA%\PkgFree\config.json` (su Linux in
-`~/.config/PkgFree/config.json`). Su macOS la modalità portatile si attiva
-creando a mano la cartella `PkgFree-data` accanto a `PkgFree.app`.
+impostazioni finiscono in `%APPDATA%\PS-PKG-Toolkit\config.json` (su Linux in
+`~/.config/PS-PKG-Toolkit/config.json`). Su macOS la modalità portatile si attiva
+creando a mano la cartella `PS-PKG-Toolkit-data` accanto a `PS-PKG-Toolkit.app`.
 *Impostazioni → Informazioni* mostra dove sono salvate.
 
 ## Uso (riga di comando)
 
-Su Windows il file della release si chiama `pkgfree-cli-windows-x64.exe` (puoi
-rinominarlo in `pkgfree-cli.exe`); su Linux e macOS si usano l'AppImage o
-`PkgFree.app/Contents/MacOS/PkgFree` con gli stessi argomenti.
+Su Windows il file della release si chiama `pspkg-windows-x64.exe` (puoi
+rinominarlo in `pspkg.exe`); su Linux e macOS si usano l'AppImage o
+`PS-PKG-Toolkit.app/Contents/MacOS/PS-PKG-Toolkit` con gli stessi argomenti.
 
 ```bat
-pkgfree-cli info gioco.pkg patch.pkg --files
-pkgfree-cli install gioco.pkg patch_1.01.pkg patch_1.05.pkg dlc1.pkg -o D:\PS4\Giochi
-pkgfree-cli install patch.pkg -o D:\PS4\Giochi --separate-update
-pkgfree-cli install dlc.pkg -o D:\PS4\Giochi --addons C:\shadPS4\user\addcont
-pkgfree-cli install gioco.pkg -o D:\PS4\Giochi --verify --delete-pkg
-pkgfree-cli verify gioco.pkg patch.pkg
+pspkg info gioco.pkg patch.pkg --files
+pspkg install gioco.pkg patch_1.01.pkg patch_1.05.pkg dlc1.pkg -o D:\PS4\Giochi
+pspkg install patch.pkg -o D:\PS4\Giochi --separate-update
+pspkg install dlc.pkg -o D:\PS4\Giochi --addons C:\shadPS4\user\addcont
+pspkg install gioco.pkg -o D:\PS4\Giochi --verify --delete-pkg
+pspkg verify gioco.pkg patch.pkg
+pspkg merge gioco.pkg patch_1.01.pkg patch_1.05.pkg -o D:\PS4\PKG\
+pspkg pack D:\PS4\Giochi\Driveclub\CUSA00003 -o Driveclub.pkg
 ```
+
+`merge` crea un nuovo PKG di gioco da gioco base e aggiornamenti (se `-o` è una
+cartella il nome è automatico; `--force` procede anche con poco spazio libero).
+`pack` crea un PKG di gioco da una cartella già estratta (quella che contiene
+`sce_sys`).
 
 Opzioni di `install`: `--verify` (verifica SHA-256 prima di estrarre),
 `--delete-pkg` (cancella i PKG se tutto è riuscito), `--no-resume` (ignora
 un'estrazione interrotta e riparte da zero), `--force` (procede anche con poco
 spazio libero o se verrebbe installata una versione più vecchia),
 `--separate-update`, `--no-title-folder`. La lingua segue quella del sistema;
-per sceglierla: `PKGFREE_LANG=en` oppure `PKGFREE_LANG=it`.
+per sceglierla: `PSPKG_LANG=en` oppure `PSPKG_LANG=it`.
 
 ## Note e limiti
 
@@ -203,18 +243,19 @@ pip install -r requirements.txt pyinstaller
 set QT_QPA_PLATFORM=offscreen
 python -m unittest discover -s tests
 set QT_QPA_PLATFORM=
-pyinstaller --onefile --windowed --name PkgFree --exclude-module tkinter pkgfree_gui.py
-pyinstaller --onefile --console --name pkgfree-cli --exclude-module PySide6 --exclude-module qfluentwidgets pkgfree_cli.py
+pyinstaller --onefile --windowed --name PS-PKG-Toolkit --exclude-module tkinter pkgfree_gui.py
+pyinstaller --onefile --console --name pspkg --exclude-module PySide6 --exclude-module qfluentwidgets pkgfree_cli.py
 ```
 
 AppImage per Linux (serve `curl`; scarica `appimagetool`):
 
 ```bash
 pip install -r requirements.txt pyinstaller pillow
-packaging/linux/build_appimage.sh      # crea dist/PkgFree-x86_64.AppImage
+packaging/linux/build_appimage.sh      # crea dist/PS-PKG-Toolkit-x86_64.AppImage
 ```
 
-Senza compilare: `python -m pkgfree` (GUI) oppure `python -m pkgfree install ...`.
+Senza compilare: `python -m pkgfree` (GUI) oppure `python -m pkgfree install ...`
+(`pkgfree` è il nome interno del pacchetto Python, rimasto quello di prima).
 
 ## Struttura del codice
 
@@ -224,17 +265,22 @@ Senza compilare: `python -m pkgfree` (GUI) oppure `python -m pkgfree install ...
 | `pkgfree/crypto.py` | RSA / AES-CBC / HMAC / XTS |
 | `pkgfree/keys.py` | chiavi RSA pubbliche per fPKG |
 | `pkgfree/installer.py` | unione gioco + patch + DLC, ripresa, spazio libero, libreria |
+| `pkgfree/builder.py` | creazione di un fPKG di gioco (PFS interno, PFSC, PFS esterno firmato e cifrato, voci e intestazione) |
+| `pkgfree/merge.py` | nuovo PKG da gioco base + aggiornamenti, letti direttamente dai PKG |
+| `pkgfree/sfo.py` | lettura e scrittura del `param.sfo` |
+| `pkgfree/build_keys.py` | chiavi pubbliche e di debug usate per creare i PKG (da LibOrbisPkg) |
 | `pkgfree/updater.py` | aggiornamento dall'app (release GitHub) |
-| `pkgfree/portable.py` | versione portatile (cartella `PkgFree-data`, percorsi relativi) |
+| `pkgfree/portable.py` | versione portatile (cartella `PS-PKG-Toolkit-data`, percorsi relativi) |
 | `pkgfree/i18n.py`, `pkgfree/i18n_en.py` | traduzione inglese |
 | `pkgfree/gui/` | interfaccia Fluent: `extract_page.py` (schede per gioco), `library_page.py`, `progress_page.py` (avanzamento + thread di estrazione), `settings_page.py` (impostazioni, registro), `update_ui.py`, `window.py`, `config.py` |
 | `pkgfree/cli.py` | riga di comando |
-| `tests/` | test con PKG sintetici generati al volo (estrazione, ripresa, verifica, aggiornamento, traduzioni) più uno smoke test della GUI |
+| `tests/` | test con PKG sintetici generati al volo (estrazione, ripresa, verifica, creazione di PKG con i controlli del validatore di LibOrbisPkg, aggiornamento, traduzioni) più uno smoke test della GUI |
 | `packaging/linux/` | script e file per l'AppImage (`build_appimage.sh`, `AppRun`, `.desktop`) |
-| `assets/pkgfree.png` | icona dell'app |
+| `assets/ps-pkg-toolkit.png` | icona dell'app |
 
 ## Licenza
 
 GPL-3.0-or-later (richiesta da PySide6-Fluent-Widgets, GPLv3). Il formato e le
 chiavi derivano dall'estrattore PKG (GPL-2.0-or-later) storicamente incluso in
-shadPS4 e da LibOrbisPkg.
+shadPS4 e da LibOrbisPkg (LGPL-3.0, di maxton), da cui deriva anche la
+struttura dei PKG creati.

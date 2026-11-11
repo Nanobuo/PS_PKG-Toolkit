@@ -1,9 +1,9 @@
-"""Portable mode: settings live in a "PkgFree-data" folder next to the program.
+"""Portable mode: settings live in a "PS-PKG-Toolkit-data" folder next to the program.
 
 The folder is created at the first start when the program sits in a writable place
 (a USB stick, a folder on the desktop...). Otherwise, e.g. in C:\\Program Files, the
 settings go to the user profile as before. On macOS portable mode is opt-in: create
-the folder next to PkgFree.app by hand.
+the folder next to PS-PKG-Toolkit.app by hand.
 
 Folders on the same removable drive as the program are stored relative to it, so they
 keep working when the stick gets another drive letter on another PC.
@@ -16,7 +16,11 @@ import shutil
 import sys
 from typing import Optional
 
-DATA_DIR = "PkgFree-data"
+DATA_DIR = "PS-PKG-Toolkit-data"
+USER_DIR = "PS-PKG-Toolkit"
+# Names used up to version 1.5 (when the program was called PKG Free).
+LEGACY_DATA_DIR = "PkgFree-data"
+LEGACY_USER_DIR = "PkgFree"
 CONFIG_NAME = "config.json"
 
 
@@ -27,9 +31,30 @@ def program_dir() -> Optional[str]:
     return os.path.dirname(target) if target else None
 
 
+def _profile_base() -> str:
+    return os.environ.get("APPDATA") or os.path.join(os.path.expanduser("~"), ".config")
+
+
 def user_data_dir() -> str:
-    base = os.environ.get("APPDATA") or os.path.join(os.path.expanduser("~"), ".config")
-    return os.path.join(base, "PkgFree")
+    return os.path.join(_profile_base(), USER_DIR)
+
+
+def carry_over_settings(data_dir: str) -> None:
+    """Give a new settings folder the settings of an earlier copy, if there are any."""
+    target = os.path.join(data_dir, CONFIG_NAME)
+    if os.path.exists(target):
+        return
+    for folder in (user_data_dir(), os.path.join(_profile_base(), LEGACY_USER_DIR)):
+        old = os.path.join(folder, CONFIG_NAME)
+        if os.path.normcase(os.path.abspath(old)) == os.path.normcase(os.path.abspath(target)):
+            continue
+        if os.path.isfile(old):
+            try:
+                os.makedirs(data_dir, exist_ok=True)
+                shutil.copy2(old, target)
+            except OSError:
+                pass
+            return
 
 
 def portable_data_dir(prog_dir: Optional[str], platform: str = sys.platform) -> Optional[str]:
@@ -39,6 +64,13 @@ def portable_data_dir(prog_dir: Optional[str], platform: str = sys.platform) -> 
     data = os.path.join(prog_dir, DATA_DIR)
     if os.path.isdir(data):
         return data
+    legacy = os.path.join(prog_dir, LEGACY_DATA_DIR)
+    if os.path.isdir(legacy):
+        try:
+            os.rename(legacy, data)
+            return data
+        except OSError:
+            return legacy
     if platform == "darwin":
         return None
     try:
@@ -46,12 +78,7 @@ def portable_data_dir(prog_dir: Optional[str], platform: str = sys.platform) -> 
     except OSError:
         return None
     # First portable start: carry over the settings of an installed copy, if any.
-    old = os.path.join(user_data_dir(), CONFIG_NAME)
-    if os.path.isfile(old):
-        try:
-            shutil.copy2(old, os.path.join(data, CONFIG_NAME))
-        except OSError:
-            pass
+    carry_over_settings(data)
     return data
 
 

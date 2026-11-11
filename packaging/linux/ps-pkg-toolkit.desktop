@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=PS PKG Toolkit
+Comment=Estrae PKG PS4 (fPKG) per shadPS4 e unisce gioco e aggiornamenti in un nuovo PKG
+Exec=PS-PKG-Toolkit
+Icon=ps-pkg-toolkit
+Terminal=false
+Categories=Utility;Game;

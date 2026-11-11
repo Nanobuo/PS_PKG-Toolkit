@@ -13,8 +13,10 @@ EN = {
         "WARNING: not enough space on {path}: {needed} needed, {free} free.",
     "ERRORE: spazio su disco insufficiente. Libera spazio o usa --force.":
         "ERROR: not enough disk space. Free some space or use --force.",
-    "Estrae PKG PS4 (fPKG) in cartelle per shadPS4, unendo gioco, patch e DLC.":
-        "Extracts PS4 PKGs (fPKG) into folders for shadPS4, merging game, patches and DLC.",
+    "Estrae PKG PS4 (fPKG) in cartelle per shadPS4 unendo gioco, patch e DLC, oppure crea "
+    "un nuovo PKG con gioco e aggiornamenti già uniti.":
+        "Extracts PS4 PKGs (fPKG) into folders for shadPS4, merging game, patches and DLC, or "
+        "creates a new PKG with the game and its updates already merged.",
     "mostra le informazioni di uno o più PKG": "show information about one or more PKGs",
     "elenca anche i file contenuti": "also list the files inside",
     "mostra dettagli tecnici (utili per segnalare problemi)":
@@ -268,7 +270,7 @@ EN = {
     "Aggiornamento installato. Riavvio…": "Update installed. Restarting…",
     "Riprova": "Retry",
     "Chiudi": "Close",
-    "PKG Free {version} disponibile": "PKG Free {version} available",
+    "PS PKG Toolkit {version} disponibile": "PS PKG Toolkit {version} available",
     "Nessuna nota per questa versione.": "No notes for this version.",
     "Aggiorna e riavvia": "Update and restart",
     "Il programma verrà scaricato, sostituito e riavviato.":
@@ -283,21 +285,21 @@ EN = {
     "delle release.":
         "Cannot replace the program: {error}. Download the new version from the releases "
         "page.",
-    "Aggiornamento installato. Riavvia PKG Free a mano ({error}).":
-        "Update installed. Restart PKG Free yourself ({error}).",
+    "Aggiornamento installato. Riavvia PS PKG Toolkit a mano ({error}).":
+        "Update installed. Restart PS PKG Toolkit yourself ({error}).",
 
     # -- GUI: main window -----------------------------------------------------------------
     "Estrai": "Extract",
     "Avanzamento": "Progress",
     "Cambia tema": "Switch theme",
     "Controllo in corso…": "Checking…",
-    "PKG Free {current} · disponibile la versione {version}":
-        "PKG Free {current} · version {version} available",
-    "Disponibile PKG Free {version}": "PKG Free {version} available",
+    "PS PKG Toolkit {current} · disponibile la versione {version}":
+        "PS PKG Toolkit {current} · version {version} available",
+    "Disponibile PS PKG Toolkit {version}": "PS PKG Toolkit {version} available",
     "Aggiornamento disponibile": "Update available",
     "Dettagli": "Details",
-    "PKG Free {current} · è l'ultima versione": "PKG Free {current} · up to date",
-    "PKG Free {current} · controllo non riuscito": "PKG Free {current} · check failed",
+    "PS PKG Toolkit {current} · è l'ultima versione": "PS PKG Toolkit {current} · up to date",
+    "PS PKG Toolkit {current} · controllo non riuscito": "PS PKG Toolkit {current} · check failed",
     "Controllo aggiornamenti: {message}": "Update check: {message}",
     "Riavvio necessario": "Restart needed",
     "La nuova lingua verrà usata al prossimo avvio.":
@@ -308,7 +310,7 @@ EN = {
     "Stai già usando l'ultima versione ({version}).":
         "You are already using the latest version ({version}).",
     "Controllo non riuscito": "Check failed",
-    "Aggiorna al termine dell'estrazione.": "Update when the extraction is over.",
+    "Aggiorna al termine dell'operazione.": "Update when the current operation is over.",
     "Versione più vecchia": "Older version",
     "Sovrascrivi": "Overwrite",
     "{path}: servono {needed}, liberi {free}": "{path}: {needed} needed, {free} free",
@@ -316,7 +318,7 @@ EN = {
         "The extraction would stop halfway. Free some space or choose another folder.",
     "Estrazione completata.": "Extraction completed.",
     "Annullamento…": "Cancelling…",
-    "Vuoi interrompere l'estrazione e uscire?": "Stop the extraction and quit?",
+    "Vuoi interrompere l'operazione in corso e uscire?": "Stop the current operation and quit?",
     "Interrompi ed esci": "Stop and quit",
     "Continua": "Continue",
     "Impossibile procedere": "Cannot proceed",
@@ -332,4 +334,91 @@ EN = {
     "Impostazioni salvate in": "Settings saved in",
     "Impostazioni salvate accanto al programma: {folder}":
         "Settings saved next to the program: {folder}",
+    # -- PKG creation ----------------------------------------------------------------
+    "CONTENT_ID non valido nel param.sfo: '{cid}'":
+        "Invalid CONTENT_ID in param.sfo: '{cid}'",
+    'Calcolo delle impronte…':
+        'Computing digests…',
+    'Crea PKG':
+        'Create PKG',
+    'Crea comunque':
+        'Create anyway',
+    'Creato {path} ({cid})':
+        'Created {path} ({cid})',
+    'Creato {path}: {title} v{version} ({cid})':
+        'Created {path}: {title} v{version} ({cid})',
+    'Creazione del PKG in corso':
+        'Creating the PKG',
+    'Creazione del PKG interrotta':
+        'PKG creation stopped',
+    'Creazione di {path}':
+        'Creating {path}',
+    'Dimensione inattesa per {path}: {got} invece di {size} byte':
+        'Unexpected size for {path}: {got} instead of {size} bytes',
+    'ERRORE: spazio insufficiente per il nuovo PKG: servono {needed}, liberi {free}. Usa --force per procedere comunque.':
+        'ERROR: not enough space for the new PKG: {needed} needed, {free} free. Use --force to go ahead anyway.',
+    'ERRORE: {path} non trovato: non è la cartella di un gioco.':
+        'ERROR: {path} not found: this is not a game folder.',
+    'Immagine PFS interna di dimensione inattesa':
+        'Inner PFS image has an unexpected size',
+    'Lettura di {name}...':
+        'Reading {name}...',
+    "Libera spazio oppure scegli un'altra cartella.":
+        'Free up some space or choose another folder.',
+    'Manca sce_sys/param.sfo: non è la cartella di un gioco':
+        'sce_sys/param.sfo is missing: this is not a game folder',
+    'Operazione annullata: il PKG incompleto è stato eliminato.':
+        'Cancelled: the incomplete PKG has been deleted.',
+    'Operazione in corso':
+        'Operation in progress',
+    'PKG PS4 (*.pkg)':
+        'PS4 PKG (*.pkg)',
+    'PKG creato':
+        'PKG created',
+    'PKG creato.':
+        'PKG created.',
+    'PKG pronto':
+        'PKG ready',
+    'Per il nuovo PKG servono fino a {needed}, liberi {free}.':
+        'The new PKG needs up to {needed}, {free} free.',
+    'Preparazione del file system ({n} file)...':
+        'Preparing the file system ({n} files)...',
+    'Salva il nuovo PKG':
+        'Save the new PKG',
+    'Scegli un nome diverso da quello dei PKG di origine.':
+        'Choose a name different from the source PKGs.',
+    "Scrittura dell'immagine PFS ({size} MB)...":
+        'Writing the PFS image ({size} MB)...',
+    'Serve esattamente un gioco base per creare il PKG (trovati: {n})':
+        'Exactly one base game is needed to create the PKG (found: {n})',
+    "Si possono creare solo PKG di giochi (categoria 'gd', trovata '{cat}')":
+        "Only game PKGs can be created (category 'gd', found '{cat}')",
+    'Struttura del PKG':
+        'PKG structure',
+    'Unisce gioco base e aggiornamenti in un nuovo PKG, da installare su una PS4 modificata. I DLC restano PKG separati.':
+        'Merges the base game and its updates into a new PKG to install on a modded PS4. DLC stay separate PKGs.',
+    'cartella del gioco (quella che contiene sce_sys)':
+        'game folder (the one containing sce_sys)',
+    'crea un PKG di gioco da una cartella estratta':
+        'create a game PKG from an extracted folder',
+    'crea un nuovo PKG di gioco unendo il gioco base e i suoi aggiornamenti':
+        'create a new game PKG merging the base game and its updates',
+    'file PKG da creare, oppure una cartella (nome automatico)':
+        'PKG file to create, or a folder (automatic name)',
+    'gioco base e aggiornamenti (in qualsiasi ordine)':
+        'base game and updates (in any order)',
+    'procedi anche se lo spazio libero non basta':
+        'go ahead even if there is not enough free space',
+    'Installalo sulla PS4 modificata come un normale PKG.':
+        'Install it on the modded PS4 like any other PKG.',
+    '{name} è un aggiornamento di un altro gioco ({other})':
+        '{name} is an update for another game ({other})',
+    '{name} è una patch delta: non può essere unita':
+        '{name} is a delta patch: it cannot be merged',
+    '{name}: param.sfo mancante':
+        '{name}: param.sfo missing',
+    '{name}: solo il gioco base e i suoi aggiornamenti possono essere uniti in un PKG (i DLC restano PKG separati)':
+        '{name}: only the base game and its updates can be merged into a PKG (DLC stay separate PKGs)',
+    '{size} elaborati':
+        '{size} processed',
 }
